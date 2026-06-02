@@ -60,6 +60,8 @@ Vagrantfile
 /writable/uploads/*
 !/writable/uploads/index.html
 
+/writable/google-service-account.json
+
 /writable/debugbar/*
 !/writable/debugbar/index.html
 
