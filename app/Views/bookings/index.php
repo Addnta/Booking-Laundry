@@ -302,6 +302,7 @@
     const shippingCostDisplay = document.getElementById('shippingCostDisplay');
     const provinceNameInput = document.getElementById('provinceNameInput');
     const cityNameInput = document.getElementById('cityNameInput');
+    const apiKey = '<?= esc($apiKey ?? '') ?>';
     const oldProvinceId = '<?= esc(old('destination_province_id') ?? '') ?>';
     const oldCityId = '<?= esc(old('destination_city_id') ?? '') ?>';
     const oldDeliveryType = '<?= esc(old('delivery_type') ?? 'pickup') ?>';
@@ -376,11 +377,19 @@
         }
 
         try {
-            const response = await fetch('<?= base_url('/api/rajaongkir/cities/') ?>' + provinceId);
+            const response = await fetch('<?= base_url('/api/rajaongkir/cities/') ?>' + provinceId, {
+                headers: {
+                    ...(apiKey ? { 'X-API-KEY': apiKey } : {})
+                }
+            });
             const data = await response.json();
-            const cities = Array.isArray(data)
-                ? data
-                : (Array.isArray(data?.rajaongkir?.results) ? data.rajaongkir.results : []);
+            if (data?.status !== 'success') {
+                citySelect.innerHTML = '<option value="">Gagal memuat kota</option>';
+                cityNameInput.value = '';
+                return;
+            }
+
+            const cities = Array.isArray(data?.data) ? data.data : [];
 
             citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
             cities.forEach(city => {
@@ -421,7 +430,8 @@
             const response = await fetch('<?= base_url('/api/rajaongkir/cost') ?>', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(apiKey ? { 'X-API-KEY': apiKey } : {})
                 },
                 body: JSON.stringify({
                     destination_city_id: destinationCityId,
@@ -429,7 +439,11 @@
                 })
             });
             const result = await response.json();
-            const value = result[0]?.costs?.[0]?.cost?.[0]?.value || 0;
+            if (result?.status !== 'success') {
+                shippingCostDisplay.value = 'Rp 0';
+                return;
+            }
+            const value = result?.data?.[0]?.costs?.[0]?.cost?.[0]?.value || 0;
             shippingCostDisplay.value = formatCurrency(value);
         } catch (error) {
             shippingCostDisplay.value = 'Rp 0';

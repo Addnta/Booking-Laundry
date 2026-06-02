@@ -30,7 +30,18 @@ class RajaOngkirService
 
     public function getCities(int $provinceId): array
     {
-        return $this->request('city', ['province' => $provinceId]);
+        $cacheKey = 'cities_' . $provinceId;
+        $cache = $this->getCachedResult($cacheKey);
+        if (!empty($cache)) {
+            return $cache;
+        }
+
+        $results = $this->request('city', ['province' => $provinceId]);
+        if (!empty($results)) {
+            $this->cacheResult($cacheKey, $results, 86400);
+        }
+
+        return $results;
     }
 
     public function calculateCost(int $destinationCityId, float $weight): array
@@ -44,7 +55,16 @@ class RajaOngkirService
             'courier' => 'jne',
         ];
 
+        $cacheKey = 'cost_' . sha1(json_encode($payload));
+        $cache = $this->getCachedResult($cacheKey);
+        if (!empty($cache)) {
+            return $cache;
+        }
+
         $result = $this->request('cost', [], 'POST', $payload);
+        if (!empty($result)) {
+            $this->cacheResult($cacheKey, $result, 3600);
+        }
 
         return $result;
     }
@@ -83,10 +103,30 @@ class RajaOngkirService
         curl_close($curl);
 
         if ($response === false || $errno !== 0) {
+            log_message('error', 'RajaOngkir request failed for {endpoint}: {error}', [
+                'endpoint' => $endpoint,
+                'error' => $error ?: 'unknown error',
+            ]);
             return [];
         }
 
         $data = json_decode($response, true);
+
+        if ($status < 200 || $status >= 300) {
+            log_message('error', 'RajaOngkir returned HTTP {status} for {endpoint}: {response}', [
+                'status' => (string) $status,
+                'endpoint' => $endpoint,
+                'response' => substr((string) $response, 0, 500),
+            ]);
+            return [];
+        }
+
+        if (!is_array($data) || empty($data['rajaongkir']['results'])) {
+            log_message('error', 'RajaOngkir response format invalid for {endpoint}', [
+                'endpoint' => $endpoint,
+            ]);
+            return [];
+        }
 
         return $data['rajaongkir']['results'] ?? [];
     }

@@ -28,6 +28,7 @@ class Filters extends BaseFilters
         'auth' => \App\Filters\AuthFilter::class,
         'admin' => \App\Filters\AdminFilter::class,
         'adminFilter' => \App\Filters\AdminFilter::class,
+        'apiKey' => \App\Filters\ApiKeyFilter::class,
         'staffFilter' => \App\Filters\StaffFilter::class,
         'customerFilter' => \App\Filters\CustomerFilter::class,
         'csrf'          => CSRF::class,

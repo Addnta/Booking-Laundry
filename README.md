@@ -10,6 +10,8 @@ Sistem pemesanan layanan berbasis web untuk booking jasa seperti laundry, salon,
 - PHPMailer + Gmail SMTP for email notification
 - RajaOngkir API for shipping estimation
 - Google Calendar API for schedule sync
+- API key protected endpoints are available under `/api/*`
+- API docs endpoint is available at `/api/docs`
 
 ## Project Notes
 
@@ -23,7 +25,7 @@ Sistem pemesanan layanan berbasis web untuk booking jasa seperti laundry, salon,
 ## Setup
 
 1. Copy `env` to `.env`.
-2. Set database, email, Midtrans, RajaOngkir, and Google Calendar configuration.
+2. Set database, email, API key, Midtrans, RajaOngkir, and Google Calendar configuration.
 3. Run migrations and seeders.
 4. Start the app from the `public` folder.
 
@@ -32,4 +34,3 @@ Sistem pemesanan layanan berbasis web untuk booking jasa seperti laundry, salon,
 - Admin: manage services, schedules, bookings, users, staff, and dashboard stats
 - Staff: see daily tasks, update progress, and view personal work history
 - Customer: register, login, browse services, book schedules, pay via Midtrans, cancel pending bookings, and submit reviews
-

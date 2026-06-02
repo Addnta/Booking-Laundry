@@ -161,9 +161,11 @@ $routes->group('', ['filter' => 'adminFilter'], function($routes) {
     $routes->post('/admin/reminders/h1', 'NotificationController::sendH1Reminder');
 });
 
-$routes->get('/api/rajaongkir/provinces', 'RajaOngkirController::provinces');
-$routes->get('/api/rajaongkir/cities/(:num)', 'RajaOngkirController::cities/$1');
-$routes->post('/api/rajaongkir/cost', 'RajaOngkirController::cost');
+$routes->get('/api/docs', 'Api\DocsController::index');
+
+$routes->get('/api/rajaongkir/provinces', 'RajaOngkirController::provinces', ['filter' => 'apiKey']);
+$routes->get('/api/rajaongkir/cities/(:num)', 'RajaOngkirController::cities/$1', ['filter' => 'apiKey']);
+$routes->post('/api/rajaongkir/cost', 'RajaOngkirController::cost', ['filter' => 'apiKey']);
 
 $routes->post(
     '/payment/webhook',
@@ -224,10 +226,43 @@ $routes->get(
 
 $routes->get(
     '/api/services',
-    'Api\ServicesApiController::index'
+    'Api\ServicesApiController::index',
+    ['filter' => 'apiKey']
+);
+
+$routes->get(
+    '/api/services/(:num)',
+    'Api\ServicesApiController::show/$1',
+    ['filter' => 'apiKey']
+);
+
+$routes->post(
+    '/api/services',
+    'Api\ServicesApiController::store',
+    ['filter' => 'apiKey']
+);
+
+$routes->match(
+    ['put', 'patch'],
+    '/api/services/(:num)',
+    'Api\ServicesApiController::update/$1',
+    ['filter' => 'apiKey']
+);
+
+$routes->delete(
+    '/api/services/(:num)',
+    'Api\ServicesApiController::delete/$1',
+    ['filter' => 'apiKey']
 );
 
 $routes->get(
     '/api/booking-status/(:num)',
-    'Api\BookingApiController::status/$1'
+    'Api\BookingApiController::status/$1',
+    ['filter' => 'apiKey']
+);
+
+$routes->get(
+    '/api/bookings/(:num)',
+    'Api\BookingApiController::show/$1',
+    ['filter' => 'apiKey']
 );

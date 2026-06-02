@@ -44,6 +44,7 @@ class BookingController extends BaseController
         unset($schedule);
 
         $data['provinces'] = $rajaOngkir->getProvinces();
+        $data['apiKey'] = (string) env('api.key', '');
 
         return view(
             'bookings/index',
