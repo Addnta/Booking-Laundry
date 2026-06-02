@@ -206,11 +206,11 @@
                 <select id="provinceSelect" name="destination_province_id" class="form-select">
                     <option value="">-- Pilih Provinsi --</option>
                     <?php foreach($provinces as $province): ?>
-                        <option
-                            value="<?= esc($province['province_id']) ?>"
-                            <?= old('destination_province_id') == $province['province_id'] ? 'selected' : '' ?>
+                    <option
+                            value="<?= esc($province['id']) ?>"
+                            <?= old('destination_province_id') == $province['id'] ? 'selected' : '' ?>
                         >
-                            <?= esc($province['province']) ?>
+                            <?= esc($province['name']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -394,10 +394,10 @@
             citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
             cities.forEach(city => {
                 const option = document.createElement('option');
-                option.value = city.city_id;
-                option.textContent = city.type + ' ' + city.city_name;
-                option.dataset.cityName = city.type + ' ' + city.city_name;
-                if (oldCityId && oldCityId === city.city_id) {
+                option.value = city.id;
+                option.textContent = city.name;
+                option.dataset.cityName = city.name;
+                if (oldCityId && oldCityId === city.id) {
                     option.selected = true;
                 }
                 citySelect.appendChild(option);
@@ -443,7 +443,7 @@
                 shippingCostDisplay.value = 'Rp 0';
                 return;
             }
-            const value = result?.data?.[0]?.costs?.[0]?.cost?.[0]?.value || 0;
+            const value = result?.data?.[0]?.cost || 0;
             shippingCostDisplay.value = formatCurrency(value);
         } catch (error) {
             shippingCostDisplay.value = 'Rp 0';

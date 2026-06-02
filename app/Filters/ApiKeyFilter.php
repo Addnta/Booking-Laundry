@@ -11,6 +11,10 @@ class ApiKeyFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $expectedKey = (string) env('api.key', '');
+        $fallbackKey = (string) env('rajaongkir.apiKey', '');
+        if ($expectedKey === '' || str_starts_with($expectedKey, 'CHANGE_ME_')) {
+            $expectedKey = $fallbackKey;
+        }
         if ($expectedKey === '') {
             return null;
         }

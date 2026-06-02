@@ -20,7 +20,7 @@ class RajaOngkirService
             return $cache;
         }
 
-        $results = $this->request('province');
+        $results = $this->request('destination/province');
         if (!empty($results)) {
             $this->cacheResult('provinces', $results, 86400); // cache 24 hours
         }
@@ -36,7 +36,7 @@ class RajaOngkirService
             return $cache;
         }
 
-        $results = $this->request('city', ['province' => $provinceId]);
+        $results = $this->request('destination/city/' . $provinceId);
         if (!empty($results)) {
             $this->cacheResult($cacheKey, $results, 86400);
         }
@@ -48,11 +48,10 @@ class RajaOngkirService
     {
         $payload = [
             'origin' => $this->config->originCityId,
-            'originType' => 'city',
             'destination' => $destinationCityId,
-            'destinationType' => 'city',
             'weight' => max(1, ceil($weight * 1000)),
             'courier' => 'jne',
+            'price' => 'lowest',
         ];
 
         $cacheKey = 'cost_' . sha1(json_encode($payload));
@@ -61,7 +60,7 @@ class RajaOngkirService
             return $cache;
         }
 
-        $result = $this->request('cost', [], 'POST', $payload);
+        $result = $this->request('calculate/domestic-cost', [], 'POST', $payload);
         if (!empty($result)) {
             $this->cacheResult($cacheKey, $result, 3600);
         }
@@ -84,16 +83,21 @@ class RajaOngkirService
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            'key: ' . $this->config->apiKey,
+            'Key: ' . $this->config->apiKey,
         ]);
+        if ($method === 'POST') {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Key: ' . $this->config->apiKey,
+            ]);
+        }
         // Set timeouts to avoid long blocking when RajaOngkir is slow/unreachable
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5); // 5 seconds to connect
         curl_setopt($curl, CURLOPT_TIMEOUT, 10); // 10 seconds total
 
         if ($method === 'POST') {
             curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($payload));
         }
 
         $response = curl_exec($curl);
@@ -121,14 +125,14 @@ class RajaOngkirService
             return [];
         }
 
-        if (!is_array($data) || empty($data['rajaongkir']['results'])) {
+        if (!is_array($data) || !isset($data['data'])) {
             log_message('error', 'RajaOngkir response format invalid for {endpoint}', [
                 'endpoint' => $endpoint,
             ]);
             return [];
         }
 
-        return $data['rajaongkir']['results'] ?? [];
+        return $data['data'] ?? [];
     }
 
     protected function getCachePath(string $key): string

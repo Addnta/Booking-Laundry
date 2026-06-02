@@ -8,7 +8,7 @@ class RajaOngkir extends BaseConfig
 {
     public string $apiKey;
     public string $originCityId;
-    public string $apiUrl = 'https://api.rajaongkir.com/starter';
+    public string $apiUrl = 'https://rajaongkir.komerce.id/api/v1';
 
     public function __construct()
     {
