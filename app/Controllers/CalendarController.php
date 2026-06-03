@@ -7,6 +7,13 @@ use App\Models\BookingModel;
 
 class CalendarController extends BaseController
 {
+    protected function escapeIcsValue(?string $value): string
+    {
+        $value = (string) $value;
+        $value = str_replace(['\\', ';', ','], ['\\\\', '\;', '\,'], $value);
+        return preg_replace("/\r\n|\r|\n/", '\n', $value) ?? '';
+    }
+
     public function sync($id)
     {
         $bookingModel = new BookingModel();
@@ -61,16 +68,55 @@ class CalendarController extends BaseController
         }
 
         $uid = 'booking-' . $booking['id'] . '@laundry-booking.local';
-        $summary = 'Laundry Booking - ' . $booking['booking_code'];
-        $description = 'Booking untuk layanan ' . ($booking['service_name'] ?? '') . '. Status: ' . $booking['booking_status'];
-        $location = $booking['destination_address'] ?? 'Laundry outlet';
+        $summary = $this->escapeIcsValue('Laundry Booking - ' . $booking['booking_code']);
+        $descriptionParts = [
+            'Booking kode: ' . ($booking['booking_code'] ?? '-'),
+            'Layanan: ' . ($booking['service_name'] ?? '-'),
+            'Status booking: ' . ($booking['booking_status'] ?? '-'),
+            'Status pembayaran: ' . ($booking['payment_status'] ?? '-'),
+            'Metode pengiriman: ' . ($booking['delivery_type'] ?? '-'),
+            'Catatan: ' . trim((string) ($booking['notes'] ?? '-')),
+        ];
+        if (!empty($booking['destination_address'])) {
+            $descriptionParts[] = 'Alamat: ' . $booking['destination_address'];
+        }
+        $description = $this->escapeIcsValue(implode("\n", $descriptionParts));
+        $location = $this->escapeIcsValue($booking['destination_address'] ?? 'Laundry outlet');
         $times = explode('-', $booking['time_slot'] ?? '09:00-11:00');
         $startTime = trim($times[0]) ?: '09:00';
         $endTime = trim($times[1]) ?: date('H:i', strtotime($startTime . ' +2 hours'));
         $start = date('Ymd\THis', strtotime($booking['date'] . ' ' . $startTime . ':00'));
         $end = date('Ymd\THis', strtotime($booking['date'] . ' ' . $endTime . ':00'));
+        $dtstamp = gmdate('Ymd\THis\Z');
+        $status = match ((string) ($booking['booking_status'] ?? 'pending')) {
+            'cancelled', 'rejected' => 'CANCELLED',
+            'pending' => 'TENTATIVE',
+            default => 'CONFIRMED',
+        };
+        $locationLine = 'LOCATION:' . $location;
+        $url = base_url('/my-bookings');
 
-        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Laundry Booking//EN\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nUID:$uid\r\nSUMMARY:$summary\r\nDESCRIPTION:$description\r\nDTSTART:$start\r\nDTEND:$end\r\nLOCATION:$location\r\nEND:VEVENT\r\nEND:VCALENDAR";
+        $ics = implode("\r\n", [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//Laundry Booking//EN',
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            'BEGIN:VEVENT',
+            'UID:' . $uid,
+            'DTSTAMP:' . $dtstamp,
+            'SUMMARY:' . $summary,
+            'DESCRIPTION:' . $description,
+            'DTSTART:' . $start,
+            'DTEND:' . $end,
+            'STATUS:' . $status,
+            $locationLine,
+            'URL:' . $url,
+            'TRANSP:OPAQUE',
+            'END:VEVENT',
+            'END:VCALENDAR',
+            '',
+        ]);
 
         return $this->response
             ->setHeader('Content-Type', 'text/calendar; charset=utf-8')

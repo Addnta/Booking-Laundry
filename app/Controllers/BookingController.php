@@ -116,9 +116,9 @@ class BookingController extends BaseController
 
             $rajaOngkir = new RajaOngkirService();
             $costResults = $rajaOngkir->calculateCost($destinationCityId, $weight);
-            $shippingCost = 0.00;
+            $shippingCost = (float) ($costResults[0]['cost'] ?? 0);
 
-            if (!empty($costResults[0]['costs'][0]['cost'][0]['value'])) {
+            if ($shippingCost <= 0 && !empty($costResults[0]['costs'][0]['cost'][0]['value'])) {
                 $shippingCost = (float) $costResults[0]['costs'][0]['cost'][0]['value'];
             }
 
@@ -132,24 +132,34 @@ class BookingController extends BaseController
 
         $bookingCode = 'BOOK-' . time();
 
-        $bookingModel->save([
-            'booking_code' => $bookingCode,
-            'user_id' => session()->get('user_id'),
-            'service_id' => $service['id'],
-            'schedule_id' => $schedule['id'],
-            'booking_status' => 'pending',
-            'payment_status' => 'unpaid',
-            'delivery_type' => $deliveryType,
-            'destination_province_id' => $destinationProvinceId ?: null,
-            'destination_province_name' => $destinationProvinceName ?: null,
-            'weight' => number_format($weight, 2, '.', ''),
-            'destination_city_id' => $destinationCityId ?: null,
-            'destination_city_name' => $destinationCityName ?: null,
-            'destination_address' => $destinationAddress,
-            'shipping_cost' => number_format($shippingCost, 2, '.', ''),
-            'notes' => $this->request->getPost('notes'),
-            'total_price' => number_format($totalPrice, 2, '.', ''),
-        ]);
+        try {
+            $bookingModel->save([
+                'booking_code' => $bookingCode,
+                'user_id' => session()->get('user_id'),
+                'service_id' => $service['id'],
+                'schedule_id' => $schedule['id'],
+                'booking_status' => 'pending',
+                'payment_status' => 'unpaid',
+                'delivery_type' => $deliveryType,
+                'destination_province_id' => $destinationProvinceId ?: null,
+                'destination_province_name' => $destinationProvinceName ?: null,
+                'weight' => number_format($weight, 2, '.', ''),
+                'destination_city_id' => $destinationCityId ?: null,
+                'destination_city_name' => $destinationCityName ?: null,
+                'destination_address' => $destinationAddress,
+                'shipping_cost' => number_format($shippingCost, 2, '.', ''),
+                'notes' => $this->request->getPost('notes'),
+                'total_price' => number_format($totalPrice, 2, '.', ''),
+            ]);
+        } catch (\Throwable $throwable) {
+            log_message('error', 'Booking save failed: {message}', [
+                'message' => $throwable->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Booking gagal disimpan. Silakan coba lagi.');
+        }
 
         $notificationService = new NotificationService();
         $notificationService->notify(
@@ -164,8 +174,8 @@ class BookingController extends BaseController
             'Booking baru dengan kode ' . $bookingCode . ' atas nama ' . session()->get('name') . ' telah dibuat.'
         );
 
-        return redirect()->to('/my-bookings')
-            ->with('success', 'Booking berhasil dibuat');
+        return redirect()->to('/customer/dashboard')
+            ->with('success', 'Booking berhasil dibuat dan sudah masuk ke sistem.');
     }
 
     public function myBookings()

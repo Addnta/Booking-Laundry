@@ -81,6 +81,14 @@ class DashboardController extends BaseController
             'myBookings' => $bookingModel
                 ->where('user_id', session()->get('user_id'))
                 ->countAllResults(),
+            'recentBookings' => $bookingModel
+                ->select('bookings.*, services.name as service_name, schedules.date, schedules.time_slot')
+                ->join('services', 'services.id = bookings.service_id')
+                ->join('schedules', 'schedules.id = bookings.schedule_id')
+                ->where('bookings.user_id', session()->get('user_id'))
+                ->orderBy('bookings.created_at', 'DESC')
+                ->limit(5)
+                ->findAll(),
             'services' => $serviceModel->findAll(),
         ];
 

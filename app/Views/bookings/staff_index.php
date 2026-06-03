@@ -72,7 +72,12 @@
                 <?php else : ?>
                     <ul class="mb-0">
                         <?php foreach ($dailyTasks as $task): ?>
-                            <li><?= esc($task['booking_code']) ?> - <?= esc($task['service_name']) ?> (<?= esc($task['time_slot']) ?>)</li>
+                            <li>
+                                <?= esc($task['booking_code']) ?> - <?= esc($task['service_name']) ?> (<?= esc($task['time_slot']) ?>)
+                                <?php if (!empty($task['notes'])): ?>
+                                    <br><small class="text-muted">Catatan: <?= esc(mb_strimwidth((string) $task['notes'], 0, 70, '...')) ?></small>
+                                <?php endif; ?>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
@@ -102,6 +107,7 @@
                     <th>Customer</th>
                     <th>Service</th>
                     <th>Harga</th>
+                    <th>Catatan Laundry</th>
                     <th>Payment</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -115,6 +121,13 @@
                             <td><?= esc($booking['customer_name'] ?? '-') ?></td>
                             <td><?= esc($booking['service_name'] ?? '-') ?></td>
                             <td>Rp <?= number_format($booking['total_price'] ?? 0, 0, ',', '.') ?></td>
+                            <td>
+                                <?php if (!empty($booking['notes'])): ?>
+                                    <small class="text-dark d-block"><?= esc(mb_strimwidth((string) $booking['notes'], 0, 80, '...')) ?></small>
+                                <?php else: ?>
+                                    <span class="text-muted">Tidak ada catatan</span>
+                                <?php endif; ?>
+                            </td>
                             <td><span class="badge bg-<?= ($booking['payment_status'] ?? 'unpaid') == 'paid' ? 'success' : (($booking['payment_status'] ?? '') == 'failed' ? 'danger' : 'warning') ?>"><?= esc($booking['payment_status'] ?? 'unpaid') ?></span></td>
                             <td><span class="badge bg-<?= ($booking['booking_status'] ?? 'pending') == 'completed' ? 'success' : (($booking['booking_status'] ?? '') == 'rejected' ? 'danger' : 'info') ?>"><?= esc($booking['booking_status'] ?? 'pending') ?></span></td>
                             <td>
@@ -143,7 +156,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">Tidak ada booking untuk ditampilkan.</td>
+                        <td colspan="8" class="text-center py-4 text-muted">Tidak ada booking untuk ditampilkan.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
