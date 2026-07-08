@@ -63,4 +63,4 @@ Sistem pemesanan layanan berbasis web untuk laundry dan layanan sejenis dengan a
 
 ## Skema Data
 
-Lihat ERD lengkap di [docs/ERD.md](docs/ERD.md).
+Lihat ERD lengkap di [docs/ERD.md](docs/ERD.md) atau versi editable di [docs/ERD.drawio](docs/ERD.drawio).
