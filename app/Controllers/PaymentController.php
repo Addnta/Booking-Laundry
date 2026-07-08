@@ -88,6 +88,9 @@ class PaymentController extends BaseController
                 'order_id' => $payment['order_id'],
                 'gross_amount' => (float) $booking['total_price'],
             ],
+            'credit_card' => [
+                'secure' => true,
+            ],
             'customer_details' => [
                 'first_name' => session()->get('name') ?? 'Customer',
                 'email' => $this->getUserEmail($booking['user_id']),
@@ -116,7 +119,14 @@ class PaymentController extends BaseController
         curl_close($curl);
 
         if ($response === false || $statusCode !== 201) {
-            throw new \RuntimeException('Midtrans error: ' . ($response ?: $curlError));
+            $errorMessage = $response ?: $curlError ?: 'Unknown Midtrans error';
+            $decodedError = json_decode($response, true);
+
+            if (is_array($decodedError) && !empty($decodedError['error_messages'])) {
+                $errorMessage = implode(' | ', $decodedError['error_messages']);
+            }
+
+            throw new \RuntimeException('Midtrans error: ' . $errorMessage);
         }
 
         $result = json_decode($response, true);

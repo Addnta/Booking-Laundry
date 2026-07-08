@@ -8,7 +8,9 @@ class Midtrans extends BaseConfig
 {
     public string $serverKey;
     public string $clientKey;
-    public string $apiUrl = 'https://api.sandbox.midtrans.com/v2/transactions';
+
+    // Endpoint Snap Sandbox
+    public string $apiUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 
     public function __construct()
     {

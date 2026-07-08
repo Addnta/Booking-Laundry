@@ -8,6 +8,17 @@ class CreatePayments extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('payments')) {
+            return;
+        }
+
+        $bookingPrimary = $this->db->fieldExists('booking_code', 'bookings')
+            ? 'id'
+            : 'id_booking';
+        $bookingType = $this->db->fieldExists('booking_code', 'bookings')
+            ? 'BIGINT'
+            : 'INT';
+
         $this->forge->addField([
             'id_payment' => [
                 'type' => 'INT',
@@ -16,13 +27,13 @@ class CreatePayments extends Migration
                 'auto_increment' => true,
             ],
             'booking_id' => [
-                'type' => 'INT',
-                'constraint' => 11,
+                'type' => $bookingType,
+                'constraint' => 20,
                 'unsigned' => true,
             ],
             'jumlah_bayar' => [
-                'type' => 'INT',
-                'constraint' => 11,
+                'type' => 'DECIMAL',
+                'constraint' => '12,2',
             ],
             'tanggal_bayar' => [
                 'type' => 'DATE',
@@ -39,7 +50,7 @@ class CreatePayments extends Migration
 
         $this->forge->addKey('id_payment', true);
 
-        $this->forge->addForeignKey('booking_id', 'bookings', 'id_booking');
+        $this->forge->addForeignKey('booking_id', 'bookings', $bookingPrimary);
 
         $this->forge->createTable('payments');
     }

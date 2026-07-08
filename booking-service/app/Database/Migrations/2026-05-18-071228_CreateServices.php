@@ -8,6 +8,10 @@ class CreateServices extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('services')) {
+            return;
+        }
+
         $this->forge->addField([
             'id_service' => [
                 'type' => 'INT',

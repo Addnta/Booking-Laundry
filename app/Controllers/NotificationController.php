@@ -12,10 +12,24 @@ class NotificationController extends BaseController
     {
         $notificationModel = new NotificationModel();
 
-        $data['notifications'] = $notificationModel
-            ->where('user_id', session()->get('user_id'))
-            ->orderBy('created_at', 'DESC')
-            ->findAll();
+        $data = array_merge($this->dashboardLayout->make('admin', [
+            'pageKicker' => 'Administration alerts',
+            'pageTitle' => 'Notifikasi Admin',
+            'pageSubtitle' => 'Pantau pemberitahuan sistem dan tandai pesan yang sudah ditindaklanjuti.',
+            'pageActions' => [
+                [
+                    'label' => 'Kembali ke Dashboard',
+                    'href' => base_url('/admin/dashboard'),
+                    'icon' => 'fa-arrow-left',
+                    'class' => 'btn-outline-dark',
+                ],
+            ],
+        ]), [
+            'notifications' => $notificationModel
+                ->where('user_id', session()->get('user_id'))
+                ->orderBy('created_at', 'DESC')
+                ->findAll(),
+        ]);
 
         return view('dashboard/admin_notifications', $data);
     }

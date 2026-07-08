@@ -8,6 +8,10 @@ class CreateUsers extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('users')) {
+            return;
+        }
+
         $this->forge->addField([
     'id' => [
         'type' => 'INT',
@@ -44,4 +48,3 @@ class CreateUsers extends Migration
          $this->forge->dropTable('users');
     }
 }
-

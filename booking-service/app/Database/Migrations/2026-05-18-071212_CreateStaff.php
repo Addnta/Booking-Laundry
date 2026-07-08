@@ -8,6 +8,10 @@ class CreateStaff extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('staff')) {
+            return;
+        }
+
         $this->forge->addField([
             'id_staff' => [
                 'type' => 'INT',

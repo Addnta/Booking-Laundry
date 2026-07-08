@@ -8,6 +8,10 @@ class CreateBookings extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('bookings')) {
+            return;
+        }
+
         $this->forge->addField([
             'id_booking' => [
                 'type' => 'INT',

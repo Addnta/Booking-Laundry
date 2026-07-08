@@ -16,7 +16,7 @@ class DashboardController extends BaseController
         $serviceModel = new ServiceModel();
         $notificationModel = new NotificationModel();
 
-        $data = [
+        $data = array_merge($this->dashboardLayout->make('admin'), [
             'totalUsers' => $userModel->countAll(),
             'totalBookings' => $bookingModel->countAll(),
             'totalServices' => $serviceModel->countAll(),
@@ -50,7 +50,7 @@ class DashboardController extends BaseController
             'pendingBookings' => $bookingModel
                 ->where('booking_status', 'pending')
                 ->countAllResults(),
-        ];
+        ]);
 
         return view('dashboard/admin', $data);
     }
@@ -58,16 +58,20 @@ class DashboardController extends BaseController
     public function staff()
     {
         $bookingModel = new BookingModel();
+        $bookings = $bookingModel
+            ->select('bookings.*, users.name as customer_name, services.name as service_name')
+            ->join('users', 'users.id = bookings.user_id')
+            ->join('services', 'services.id = bookings.service_id')
+            ->orderBy('bookings.created_at', 'DESC')
+            ->findAll();
 
-        $data = [
-            'totalBookings' => $bookingModel->countAll(),
-            'bookings' => $bookingModel
-                ->select('bookings.*, users.name as customer_name, services.name as service_name')
-                ->join('users', 'users.id = bookings.user_id')
-                ->join('services', 'services.id = bookings.service_id')
-                ->orderBy('bookings.created_at', 'DESC')
-                ->findAll(),
-        ];
+        $data = array_merge($this->dashboardLayout->make('staff'), [
+            'totalBookings' => count($bookings),
+            'paidBookings' => count(array_filter($bookings, static fn (array $booking): bool => ($booking['payment_status'] ?? '') === 'paid')),
+            'processBookings' => count(array_filter($bookings, static fn (array $booking): bool => ($booking['booking_status'] ?? '') === 'process')),
+            'pendingBookings' => count(array_filter($bookings, static fn (array $booking): bool => ($booking['booking_status'] ?? '') === 'pending')),
+            'bookings' => $bookings,
+        ]);
 
         return view('dashboard/staff', $data);
     }
@@ -77,7 +81,8 @@ class DashboardController extends BaseController
         $bookingModel = new BookingModel();
         $serviceModel = new ServiceModel();
 
-        $data = [
+        $data = array_merge($this->dashboardLayout->make('customer'), [
+            'totalServices' => $serviceModel->countAll(),
             'myBookings' => $bookingModel
                 ->where('user_id', session()->get('user_id'))
                 ->countAllResults(),
@@ -90,7 +95,7 @@ class DashboardController extends BaseController
                 ->limit(5)
                 ->findAll(),
             'services' => $serviceModel->findAll(),
-        ];
+        ]);
 
         return view('dashboard/customer', $data);
     }

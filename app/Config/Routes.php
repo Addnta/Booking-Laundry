@@ -266,3 +266,24 @@ $routes->get(
     'Api\BookingApiController::show/$1',
     ['filter' => 'apiKey']
 );
+
+// WhatsApp Integration Routes
+$routes->group('', ['filter' => 'adminFilter'], function($routes) {
+    // Send direct message
+    $routes->post('/admin/whatsapp/send', 'WhatsAppController::send');
+
+    // Send booking confirmation
+    $routes->post('/admin/whatsapp/send-confirmation/(:num)', 'WhatsAppController::sendBookingConfirmation/$1');
+
+    // Send booking reminder
+    $routes->post('/admin/whatsapp/send-reminder/(:num)', 'WhatsAppController::sendReminder/$1');
+
+    // Send completion notification
+    $routes->post('/admin/whatsapp/send-completion/(:num)', 'WhatsAppController::sendCompletion/$1');
+
+    // Send bulk messages
+    $routes->post('/admin/whatsapp/send-bulk', 'WhatsAppController::sendBulk');
+
+    // Check WhatsApp API status
+    $routes->get('/admin/whatsapp/status', 'WhatsAppController::status');
+});

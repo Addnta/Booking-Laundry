@@ -8,6 +8,16 @@ class CreateBookingDetails extends Migration
 {
     public function up()
     {
+        if ($this->db->tableExists('booking_details')) {
+            return;
+        }
+
+        $usingNewSchema = $this->db->fieldExists('booking_code', 'bookings');
+        $bookingPrimary = $usingNewSchema ? 'id' : 'id_booking';
+        $servicePrimary = $usingNewSchema ? 'id' : 'id_service';
+        $bookingType = $usingNewSchema ? 'BIGINT' : 'INT';
+        $serviceType = $usingNewSchema ? 'BIGINT' : 'INT';
+
         $this->forge->addField([
             'id_detail' => [
                 'type' => 'INT',
@@ -16,13 +26,13 @@ class CreateBookingDetails extends Migration
                 'auto_increment' => true,
             ],
             'booking_id' => [
-                'type' => 'INT',
-                'constraint' => 11,
+                'type' => $bookingType,
+                'constraint' => 20,
                 'unsigned' => true,
             ],
             'service_id' => [
-                'type' => 'INT',
-                'constraint' => 11,
+                'type' => $serviceType,
+                'constraint' => 20,
                 'unsigned' => true,
             ],
             'quantity' => [
@@ -30,15 +40,15 @@ class CreateBookingDetails extends Migration
                 'constraint' => 11,
             ],
             'subtotal' => [
-                'type' => 'INT',
-                'constraint' => 11,
+                'type' => 'DECIMAL',
+                'constraint' => '12,2',
             ],
         ]);
 
         $this->forge->addKey('id_detail', true);
 
-        $this->forge->addForeignKey('booking_id', 'bookings', 'id_booking');
-        $this->forge->addForeignKey('service_id', 'services', 'id_service');
+        $this->forge->addForeignKey('booking_id', 'bookings', $bookingPrimary);
+        $this->forge->addForeignKey('service_id', 'services', $servicePrimary);
 
         $this->forge->createTable('booking_details');
     }
