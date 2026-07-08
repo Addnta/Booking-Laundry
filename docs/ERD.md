@@ -1,15 +1,15 @@
 # ERD Booking Service
 
-Berikut ERD logis untuk domain utama aplikasi.
+Berikut ERD yang mengikuti bentuk referensi gambar, tetapi disesuaikan dengan struktur migration yang benar-benar dipakai di aplikasi.
 
 ```mermaid
 erDiagram
-    USERS ||--o{ BOOKINGS : places
-    SERVICES ||--o{ BOOKINGS : selected_in
-    SCHEDULES ||--o{ BOOKINGS : scheduled_for
-    BOOKINGS ||--|| PAYMENTS : has
-    BOOKINGS ||--o{ REVIEWS : receives
-    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ BOOKINGS : memberikan
+    SERVICES ||--o{ SCHEDULES : memiliki
+    SCHEDULES ||--o{ BOOKINGS : digunakan_dalam
+    BOOKINGS ||--|| PAYMENTS : termasuk_dalam
+    BOOKINGS ||--o{ REVIEWS : diberi_review
+    USERS ||--o{ NOTIFICATIONS : menerima
 
     USERS {
         bigint id PK
@@ -17,6 +17,7 @@ erDiagram
         string email
         string password
         string role
+        string phone
         string status
         datetime created_at
         datetime updated_at
@@ -27,7 +28,7 @@ erDiagram
         string name
         text description
         decimal price
-        decimal duration
+        int duration
         string photo
         datetime created_at
         datetime updated_at
@@ -37,10 +38,9 @@ erDiagram
         bigint id PK
         bigint service_id FK
         date date
-        string time_slot
+        time time_slot
         int capacity
         datetime created_at
-        datetime updated_at
     }
 
     BOOKINGS {
@@ -52,16 +52,8 @@ erDiagram
         string booking_status
         string payment_status
         decimal weight
-        decimal shipping_cost
-        decimal total_price
-        string delivery_type
-        string destination_province_name
-        string destination_city_name
-        text destination_address
-        bigint assigned_staff_id FK
-        string work_proof_photo
-        string google_event_id
         text notes
+        decimal total_price
         datetime created_at
         datetime updated_at
     }
@@ -69,13 +61,13 @@ erDiagram
     PAYMENTS {
         bigint id PK
         bigint booking_id FK
-        string transaction_id
+        string order_id
+        text snap_token
         string payment_type
         string transaction_status
         decimal gross_amount
         datetime paid_at
         datetime created_at
-        datetime updated_at
     }
 
     REVIEWS {
@@ -84,7 +76,6 @@ erDiagram
         int rating
         text review
         datetime created_at
-        datetime updated_at
     }
 
     NOTIFICATIONS {
@@ -95,22 +86,20 @@ erDiagram
         text message
         bool is_read
         datetime created_at
-        datetime updated_at
     }
 ```
 
-## Relasi Inti
+## Makna Relasi
 
-- `users` ke `bookings` adalah one-to-many
-- `services` ke `bookings` adalah one-to-many
-- `schedules` ke `bookings` adalah one-to-many
-- `bookings` ke `payments` umumnya one-to-one
-- `bookings` ke `reviews` adalah one-to-many secara teknis, tetapi bisnisnya satu review per booking
-- `users` ke `notifications` adalah one-to-many
+- `Users` memberikan `Bookings`
+- `Services` memiliki `Schedules`
+- `Schedules` digunakan dalam `Bookings`
+- `Bookings` termasuk dalam `Payments`
+- `Bookings` diberi `Reviews`
+- `Users` menerima `Notifications`
 
 ## Catatan Desain
 
-- `booking_status` dan `payment_status` dipakai sebagai state utama operasional
-- `assigned_staff_id` menyimpan staff yang menangani booking
-- `google_event_id` digunakan saat booking disinkronkan ke Google Calendar
-- Field destinasi disiapkan untuk alur delivery/pickup dan integrasi ongkir
+- Diagram ini sengaja dibuat mendekati tampilan ERD referensi yang Anda kirim.
+- Nama atribut mengikuti migration supaya dokumentasi, model, dan database tetap konsisten.
+- Jika Anda mau, saya bisa lanjut ubah ini menjadi file `.drawio` agar tampilannya benar-benar sama seperti gambar referensi.
